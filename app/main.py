@@ -1,18 +1,24 @@
-from pathlib import Path
 from fastapi import FastAPI
+from app.config.settings import settings
+from app.routers import version, temperature
 
-app = FastAPI()
+app = FastAPI(
+    title=settings.APP_NAME,
+    version=settings.VERSION,
+    description="API to track environmental sensor data for beekeepers",
+)
+
+app.include_router(version.router, tags=["version"])
+app.include_router(temperature.router, tags=["temperature"])
 
 
-def get_version():
-    version_file = Path("/code/version.txt")
-
-    if version_file.exists():
-        return version_file.read_text().strip()
-
-    return "unknown"
+@app.get("/")
+async def root():
+    """Root endpoint - returns version."""
+    return {"version": settings.VERSION}
 
 
-@app.get("/version")
-async def version():
-    return {"version": get_version()}
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)

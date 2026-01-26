@@ -1,20 +1,14 @@
 services:
   web:
     build:
-      context: .
-      dockerfile: app/Dockerfile
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: hivebox-api
     ports:
       - "8000:8000"
     environment:
-      - PYTHONUNBUFFERED=1
-
-    
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/version"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+      - VERSION=0.1.0
+      - SENSEBOX_IDS=5eba5fbad46fb8001b799786,5c21ff8f919bf8001adf2488,5ade1acf223bd80019a1011c
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -22,9 +16,12 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.0'
+          cpus: '1'
           memory: 512M
     restart: unless-stopped
-    volumes:
-      - ./app:/code/app
-
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s

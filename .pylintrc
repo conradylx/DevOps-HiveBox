@@ -1,0 +1,13 @@
+[MASTER]
+ignore=venv,.venv,tests
+disable=
+    C0114,  
+    C0115,  
+    R0903,  
+
+[FORMAT]
+max-line-length=100
+
+[DESIGN]
+max-args=6
+max-locals=15
