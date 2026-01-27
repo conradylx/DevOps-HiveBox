@@ -86,12 +86,13 @@ jobs:
       - name: Run unit tests with pytest
         working-directory: ./app
         run: |
-          pytest --cov=. --cov-report=xml --cov-report=term
+          pytest --cov=. --cov-report=xml --cov-report=term-missing
+          ls -la coverage.xml
       
       - name: Upload coverage reports
         uses: codecov/codecov-action@5c47607acb93fed5485fdbf7232e8a31425f672a # v5.0.2
         with:
-          file: ./app/coverage.xml
+          files: ./app/coverage.xml
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: false

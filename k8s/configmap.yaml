@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hivebox-config
+  namespace: hivebox
+data:
+  OPENSENSEMAP_API_URL: "https://api.opensensemap.org"
+  MAX_DATA_AGE_SECONDS: "3600"
+  SENSEBOX_IDS: "66086c0db2e10a000b98da0d,660882e9b2e10a000b98f4e6"
+  TEMPERATURE_PHENOMENON: "Temperature"
+  PYTHONPATH: "/code"

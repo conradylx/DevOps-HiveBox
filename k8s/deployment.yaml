@@ -1,69 +1,70 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hivebox-api
+  name: hivebox
+  namespace: hivebox
   labels:
-    app: hivebox
-    component: api
+    app: hivebox-api
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: hivebox
-      component: api
+      app: hivebox-api
   template:
     metadata:
       labels:
-        app: hivebox
-        component: api
+        app: hivebox-api
     spec:
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
-        runAsUser: 1001
-        fsGroup: 1001
-        seccompProfile:
-          type: RuntimeDefault
       containers:
-        - name: hivebox-api
-          image: ghcr.io/conradylx/hivebox:latest
-          imagePullPolicy: Always
+        - name: hivebox
+          image: hivebox:0.2.0
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: hivebox-config
           ports:
-            - name: http
-              containerPort: 8000
-              protocol: TCP
-          env:
-            - name: VERSION
-              value: "0.1.0"
-            - name: SENSEBOX_IDS
-              value: "5eba5fbad46fb8001b799786,5c21ff8f919bf8001adf2488,5ade1acf223bd80019a1011c"
-          resources:
-            requests:
-              cpu: 100m
-              memory: 128Mi
-            limits:
-              cpu: 500m
-              memory: 256Mi
-          livenessProbe:
-            httpGet:
-              path: /version
-              port: http
-            initialDelaySeconds: 10
-            periodSeconds: 30
-            timeoutSeconds: 5
-            failureThreshold: 3
-          readinessProbe:
-            httpGet:
-              path: /version
-              port: http
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            timeoutSeconds: 3
-            failureThreshold: 3
+            - containerPort: 8000
+              name: http
           securityContext:
             allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
             capabilities:
               drop:
                 - ALL
-            readOnlyRootFilesystem: false
-            runAsNonRoot: true
-            runAsUser: 1001
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+              ephemeral-storage: "1Gi"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+              ephemeral-storage: "2Gi"
+          readinessProbe:
+            httpGet:
+              path: /version
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /version
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: cache
+              mountPath: /home/hiveboxusr/.cache
+      volumes:
+       - name: tmp
+         emptyDir: {}
+         sizeLimit: 128Mi
+       - name: cache
+         emptyDir: {} 
+         sizeLimit: 256Mi

@@ -1,9 +1,8 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: hivebox-api
-  labels:
-    app: hivebox
+  name: hivebox
+  namespace: hivebox
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
@@ -16,6 +15,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: hivebox-api
+                name: hivebox
                 port:
-                  number: 80
+                  number: 8000

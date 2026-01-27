@@ -2,7 +2,8 @@ FROM python:3.13.7-alpine@sha256:9ba6d8cbebf0fb6546ae71f2a1c14f6ffd2fdab83af7fa5
 
 RUN apk add --no-cache curl
 
-RUN addgroup -S hiveboxgrp && adduser -S -G hiveboxgrp hiveboxusr
+RUN addgroup -g 1000 hiveboxgrp && \
+    adduser -u 1000 -G hiveboxgrp -S hiveboxusr
 
 WORKDIR /code
 
@@ -17,9 +18,10 @@ RUN pip install --upgrade pip && \
 COPY --chown=hiveboxusr:hiveboxgrp . /code/app
 
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/code
 
 USER hiveboxusr
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
