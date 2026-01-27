@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from app.config.settings import settings
-from app.routers import version, temperature
+from app.routers import metrics, version, temperature
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -10,6 +10,7 @@ app = FastAPI(
 
 app.include_router(version.router, tags=["version"])
 app.include_router(temperature.router, tags=["temperature"])
+app.include_router(metrics.router, tags=["metrics"])
 
 
 @app.get("/")

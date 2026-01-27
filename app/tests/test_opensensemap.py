@@ -309,3 +309,22 @@ def test_opensensemap_error_with_cause():
     except OpenSenseMapError as e:
         assert str(e) == "Wrapped error"
         assert e.__cause__ == original
+
+
+@pytest.mark.parametrize(
+    "temperature,expected_status",
+    [
+        pytest.param(-5.0, "Too Cold", id="freezing"),
+        pytest.param(0.0, "Too Cold", id="zero"),
+        pytest.param(9.9, "Too Cold", id="just_below_good"),
+        pytest.param(10.0, "Good", id="lower_boundary"),
+        pytest.param(20.0, "Good", id="room_temperature"),
+        pytest.param(36.1, "Too Hot", id="just_above_good"),
+        pytest.param(40.0, "Too Hot", id="very_hot"),
+    ],
+)
+def test_get_temperature_status(temperature, expected_status):
+    """Test temperature status determination for all ranges"""
+    from app.services.opensensemap import get_temperature_status
+
+    assert get_temperature_status(temperature) == expected_status
