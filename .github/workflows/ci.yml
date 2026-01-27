@@ -191,6 +191,8 @@ jobs:
   sonarqube:
     name: SonarQube Analysis
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
 
     steps:
@@ -209,6 +211,9 @@ jobs:
   terrascan:
     name: Terraform IaC Security
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
 
     steps:
       - name: Checkout code
@@ -224,7 +229,7 @@ jobs:
           sarif_upload: true
       
       - name: Upload SARIF results
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: terrascan-report.sarif
+          sarif_file: terrascan.sarif
         if: always()
