@@ -7,14 +7,14 @@ RUN addgroup -S hiveboxgrp && adduser -S -G hiveboxgrp hiveboxusr
 WORKDIR /code
 
 COPY version.txt /code/version.txt
-COPY ./app/requirements.txt /code/app/requirements.txt
+COPY ./requirements.txt ./requirements-dev.txt /code/app/
 
-RUN pip install --no-cache-dir --upgrade pip && \
+RUN pip install --upgrade pip && \
     pip install --no-cache-dir --require-hashes -r /code/app/requirements.txt && \
     chown -R hiveboxusr:hiveboxgrp /code && \
     chmod -R 750 /code
 
-COPY --chown=hiveboxusr:hiveboxgrp ./app /code/app
+COPY --chown=hiveboxusr:hiveboxgrp . /code/app
 
 ENV PYTHONUNBUFFERED=1
 
