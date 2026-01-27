@@ -22,13 +22,13 @@ jobs:
         
         steps:
             - name: Checkout code
-              uses: actions/checkout@v4
+              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
             
             - name: Set up Docker Buildx
-              uses: docker/setup-buildx-action@988b5a0280414f521da01fcc7c20162b228f1927
+              uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3.7.1
             
             - name: Log in to GitHub Container Registry
-              uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
+              uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
               with:
                 registry: ${{ env.REGISTRY }}
                 username: ${{ github.actor }}
@@ -36,7 +36,7 @@ jobs:
             
             - name: Extract metadata
               id: meta
-              uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81
+              uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # v5.5.1
               with:
                 images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
                 tags: |
@@ -49,7 +49,7 @@ jobs:
             
             - name: Build and push Docker image
               id: build-and-push 
-              uses: docker/build-push-action@16ebe778df0e7752d2cfcbd924afdbbd89c1a755
+              uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # v6.9.0
               with:
                 context: ./app
                 file: ./app/Dockerfile
@@ -60,7 +60,7 @@ jobs:
                 cache-to: type=gha,mode=max
             
             - name: Generate artifact attestation
-              uses: actions/attest-build-provenance@v2 
+              uses: actions/attest-build-provenance@1c608d11d69870c2092266b3f9a6f3abbf17002c # v2.0.0
               with:
                 subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
                 subject-digest: ${{ steps.build-and-push.outputs.digest }} 
