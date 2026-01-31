@@ -6,7 +6,7 @@ A real-world DevOps end-to-end project following the [DevOps Roadmap - HiveBox P
 
 HiveBox is a scalable RESTful API built around [openSenseMap](https://opensensemap.org/) to help beekeepers with their chores by tracking environmental sensor data. This project covers the entire Software Development Life Cycle (SDLC) in iterative phases.
 
-## Current Status: Phase 3 - Laying the Base
+## Current Status: Phase 4 - Constructing a Shell
 
 ✅ **Phase 1**: Project Setup & Planning - COMPLETED
 - GitHub repository forked and project board created
@@ -25,13 +25,21 @@ HiveBox is a scalable RESTful API built around [openSenseMap](https://opensensem
 - 3.4 CI: GitHub Actions pipeline with linting, testing, and security scanning
 - 3.5 Testing: Unit tests (100% coverage) and integration tests in CI
 
+✅ **Phase 4**:  Expand - Constructing a Shell - COMPLETED
+- 4.1 Tools: Kind and Kubectl configured
+- 4.2 Code: `/metrics` endpoint with Prometheus, temperature status field
+- 4.3 Containers: Kubernetes manifests (Deployment, Service, Ingress, - ConfigMap, NetworkPolicy)
+- 4.4 CI: Extended pipeline with SonarQube and Terrascan
+- 4.5 CD: GitHub Actions workflow for GHCR publishing
+
 ## Project Structure
 
 ```
 DevOps-HiveBox/
 ├── .github/
 │   └── workflows/
-│       └── ci.yml           # CI pipeline
+│       ├── ci.yml           # CI pipeline
+│       └── cd.yml           # CD pipeline
 ├── app/
 │   ├── config/
 │   │   ├── __init__.py
@@ -42,19 +50,29 @@ DevOps-HiveBox/
 │   ├── routers/
 │   │   ├── __init__.py
 │   │   ├── version.py       # /version endpoint
-│   │   └── temperature.py   # /temperature endpoint
-│   ├── tests/               # Unit tests folder
+│   │   ├── temperature.py   # /temperature endpoint
+│   │   └── metrics.py       # /metrics endpoint (Prometheus)
+│   ├── tests/
 │   │   ├── __init__.py
 │   │   ├── test_version.py
+│   │   ├── test_temperature.py
 │   │   ├── test_opensensemap.py
-│   │   └── test_temperature.py
-│   ├── __init__.py          
+│   │   └── test_metrics.py  # Metrics tests
+│   ├── __init__.py
 │   ├── main.py              # FastAPI application
 │   ├── Dockerfile           # Docker image definition
 │   ├── requirements.txt     # Python dependencies
 │   ├── requirements-dev.txt # Python dev dependencies
 │   └── version.txt          # Stores current app version
-├── .coveragearc             # Coverage.py configuration file
+├── k8s/                     # Kubernetes manifests
+│   ├── configmap.yaml       # ConfigMap for env vars
+│   ├── deployment.yaml      # Deployment manifest
+│   ├── service.yaml         # Service manifest
+│   ├── ingress.yaml         # Ingress manifest
+│   ├── namespace.yaml       # Namespace definition
+│   └── networkpolicy.yaml   # Network policy
+├── kind-config.yaml         # KIND cluster configuration
+├── .coveragerc              # Coverage.py configuration
 ├── .pylintrc                # Pylint configuration
 ├── pytest.ini               # Pytest configuration
 ├── .gitignore               # Git ignore rules
@@ -83,7 +101,7 @@ Root endpoint returning application version.
 
 **Response:**
 ```json
-{"version": "0.1.0"}
+{"version": "0.2.0"}
 ```
 
 ### `GET /version`
@@ -91,7 +109,7 @@ Returns the current application version.
 
 **Response:**
 ```json
-{"version": "0.1.0"}
+{"version": "0.2.0"}
 ```
 
 ### `GET /temperature`
@@ -113,6 +131,19 @@ Returns average temperature from all configured senseBoxes with data no older th
 }
 ```
 
+### `GET /metrics`
+Returns Prometheus metrics for application monitoring.
+
+**Response (Prometheus format):**
+```prometheus
+# HELP hivebox_temperature_requests_total Total number of temperature requests
+# TYPE hivebox_temperature_requests_total counter
+hivebox_temperature_requests_total 42.0
+# HELP hivebox_version_requests_total Total number of version requests
+# TYPE hivebox_version_requests_total counter
+hivebox_version_requests_total 128.0
+```
+
 ## Quick Start
 
 ### Prerequisites
@@ -120,6 +151,8 @@ Returns average temperature from all configured senseBoxes with data no older th
 - Docker 20.10+
 - Docker Compose 2.0+
 - Python 3.13+ (for local development)
+- kubectl 1.28+ (for Kubernetes)
+- KIND 0.20+ or Minikube (for local Kubernetes cluster)
 
 ### Running with Docker Compose
 
@@ -141,6 +174,9 @@ curl http://localhost:8000/version
 
 # Temperature endpoint
 curl http://localhost:8000/temperature
+
+# Metrics endpoint
+curl http://localhost:8000/metrics
 ```
 
 4. View logs:
@@ -151,6 +187,20 @@ docker compose logs -f web
 5. Stop the application:
 ```bash
 docker compose down
+```
+
+### Running on Kubernetes
+```bash
+minikube start
+minikube addons enable ingress
+
+docker build -t ghcr.io/conradylx/devops-hivebox:latest app/
+minikube image load ghcr.io/conradylx/devops-hivebox:latest
+minikube apply -f ./k8s/namespace.yaml
+minikube apply -f ./k8s
+
+# Check status
+kubectl get pods -n hivebox-dev
 ```
 
 ### Local Development
@@ -211,6 +261,15 @@ Default senseBoxes:
 - [5c21ff8f919bf8001adf2488](https://opensensemap.org/explore/5c21ff8f919bf8001adf2488)
 - [5ade1acf223bd80019a1011c](https://opensensemap.org/explore/5ade1acf223bd80019a1011c)
 
+### Kubernetes Configuration
+The project includes the following Kubernetes resources:
+- Namespace: Isolates application resources
+- ConfigMap: Stores environment variables (VERSION, SENSEBOX_IDS)
+- Deployment: Manages pod replicas with security context
+- Service: Exposes application internally (ClusterIP)
+- Ingress: Routes external traffic to the service
+- NetworkPolicy: Controls pod-to-pod communication
+
 ## CI/CD Pipeline
 
 The project uses GitHub Actions for continuous integration:
@@ -222,19 +281,35 @@ The project uses GitHub Actions for continuous integration:
 3. **build**: Builds Docker image
 4. **test**: Runs unit tests with pytest (100% coverage)
 5. **integration-test**: Tests `/version` endpoint in Docker container
-6. **scorecard**: Runs OpenSSF Scorecard security analysis (main branch only)
+6. **terrascan**: Kubernetes manifest security scanning
+7. **sonarqube**: Code quality and security analysis
+8. **scorecard**: Runs OpenSSF Scorecard security analysis (main branch only)
 
 ### Triggers
 
 - Push to: `main`, `develop`, `feat/**`, `fix/**`
 - Pull requests to: `main`
 
+## Continuous Deployment (CD)
+Automated deployment to GitHub Container Registry (GHCR):
+
+### Published images:
+
+- ghcr.io/conradylx/devops-hivebox:latest (from main)
+- ghcr.io/conradylx/devops-hivebox:v0.1.0 (from tags)
+- ghcr.io/conradylx/devops-hivebox:main-sha-abc123 (commit SHA)
+
+### Triggers
+
+- Push to: `main`
+- Git tags (e.g., v0.1.0)
+
+
 ### Status Badges
 
-```markdown
 ![CI Pipeline](https://github.com/conradylx/DevOps-HiveBox/workflows/CI%20Pipeline/badge.svg)
-[![codecov](https://codecov.io/gh/conradylx/DevOps-HiveBox/branch/main/graph/badge.svg)](https://codecov.io/gh/conradylx/DevOps-HiveBox)
-```
+![CD Pipeline](https://github.com/conradylx/DevOps-HiveBox/workflows/CD%20Pipeline/badge.svg)
+[![codecov](https://codecov.io/gh/conradylx/DevOps-HiveBox/graph/badge.svg?token=X43GELVCX6)](https://codecov.io/gh/conradylx/DevOps-HiveBox)
 
 ## Security Features
 
@@ -255,11 +330,29 @@ The project uses GitHub Actions for continuous integration:
 - Dependency scanning in CI
 - 100% test coverage
 
+### Kubernetes Security
+- Pod Security Context (runAsNonRoot, seccompProfile)
+- Container Security Context (no privilege escalation, capabilities - dropped)
+- Network Policies for traffic control
+- No automount of service account tokens
+- Terrascan scanning for misconfigurations
+- Liveness and readiness probes
+
+### Code Security
+
+- Pylint for code quality
+- Hadolint for Dockerfile best practices
+- OpenSSF Scorecard for security analysis
+- SonarQube for SAST
+- Dependency scanning in CI
+- 100% test coverage
+
 ### Runtime Security
 - Health checks configured
 - Automatic restart policy
 - Async HTTP client with timeouts
 - Error handling for external API failures
+- Prometheus metrics for observability
 
 ## Development Workflow
 
@@ -276,6 +369,7 @@ This project follows best practices:
 3. **Pull Requests**: All changes via PR to `main`
 4. **Code Review**: Required before merging
 5. **Testing**: 100% coverage requirement
+6. **Security**: Automated scanning in CI
 
 ### Example Workflow
 
@@ -298,12 +392,24 @@ git push origin feat/add-humidity-endpoint
 - 100% code coverage
 - Mock external API calls
 - Test error scenarios
+- Prometheus metrics validation
 
 ### Integration Tests
 - Docker container validation
 - Endpoint accessibility
 - Version verification
 - HTTP status code checks
+- Temperature status field validation
+- Metrics endpoint format validation
+
+### Kubernetes Tests
+
+- Deployment health checks
+- Service connectivity
+- Ingress routing
+- Pod security context
+- Resource limits enforcement
+- Network policy validation
 
 ### Test Coverage Report
 ```bash
@@ -343,12 +449,25 @@ pytest --cov=. --cov-report=html
 - [x] OpenSSF Scorecard integration
 
 ### Phase 4 (Upcoming)
-- [ ] Kubernetes deployment
-- [ ] Prometheus metrics endpoint
-- [ ] Temperature status field
-- [ ] Integration tests
-- [ ] SonarQube analysis
-- [ ] Container registry publishing
+- [x] Kubernetes deployment
+- [x] Kubernetes manifests (Deployment, Service, Ingress)
+- [x] Prometheus metrics endpoint
+- [x] Temperature status field
+- [x] Integration tests
+- [x] SonarQube analysis
+- [x] Container registry publishing
+- [x] CD pipeline for GHCR
+
+### Phase 5 (Upcoming)
+
+- [ ] Valkey (Redis) caching layer
+- [ ] MinIO (S3) storage layer
+- [ ] /store endpoint
+- [ ] /readyz health check endpoint
+- [ ] Helm charts
+- [ ] Kustomize overlays
+- [ ] Terraform IaC
+- [ ] Grafana observability
 
 ## Project Roadmap
 
@@ -356,12 +475,12 @@ pytest --cov=. --cov-report=html
 - ✅ **Phase 1**: Kickoff & Preparation
 - ✅ **Phase 2**: Basics - Code & Containers
 - ✅ **Phase 3**: Start - Laying the Base
+- ✅ **Phase 4**: Expand - Constructing a Shell
 
 ### Current Phase
-- 🎯 **Phase 4**: Expand - Constructing a Shell (Next up!)
+- 🎯 Phase 5: Transform - Caching, Storage, IaC
 
 ### Upcoming Phases
-- **Phase 4**: Expand - Kubernetes, Metrics, Integration Tests
 - **Phase 5**: Transform - Caching, Storage, IaC
 - **Phase 6**: Optimize - GitOps, Production Ready
 - **Phase 7**: Capstone Project
@@ -416,6 +535,8 @@ This is a learning project following DevOps best practices:
 - Never push directly to `main`
 - Follow Conventional Commits (from Phase 3)
 - Document changes as you go
+- Ensure ~100% test coverage
+- Run linters before committing
 
 ## License
 

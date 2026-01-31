@@ -121,3 +121,21 @@ def calculate_average_temperature(temperature_data: List[dict]) -> float:
     average = total / len(temperature_data)
 
     return round(average, 2)
+
+
+def get_temperature_status(average_temp: float) -> str:
+    """
+    Determine temperature status based on average temperature.
+
+    Args:
+        average_temp: The average temperature
+
+    Returns:
+        str: Temperature status ("Too Cold", "Good", "Too Hot")
+    """
+    if average_temp < 10:
+        return "Too Cold"
+    elif 10 <= average_temp <= 36:
+        return "Good"
+    else:
+        return "Too Hot"
