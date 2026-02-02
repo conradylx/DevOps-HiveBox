@@ -121,7 +121,7 @@ jobs:
               echo "Response: $RESPONSE"
               VERSION=$(echo "$RESPONSE" | jq -r '.version')
               echo "Got version: $VERSION"
-              if [ "$VERSION" = "0.2.0" ]; then
+              if [ "$VERSION" = "0.3.0" ]; then
                 echo "✅ Version endpoint OK"
                 exit 0
               fi

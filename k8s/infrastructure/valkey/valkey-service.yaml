@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: valkey-service
+  namespace: hivebox
+  labels:
+    app: valkey
+    component: cache
+spec:
+  type: ClusterIP
+  selector:
+    app: valkey
+  ports:
+    - port: 6379
+      targetPort: 6379
+      protocol: TCP
+      name: valkey
+  sessionAffinity: None

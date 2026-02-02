@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hivebox
+  namespace: hivebox
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: valkey
+      component: cache
+  template:
+    metadata:
+      labels:
+        app: valkey
+        component: cache

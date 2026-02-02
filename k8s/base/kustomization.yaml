@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: hivebox
+
+resources:
+  - namespace.yaml
+  - ingress.yaml
+  - deployment.yaml
+  - service.yaml
+  - configmap.yaml
+  - networkpolicy.yaml
+
+commonLabels:
+  app.kubernetes.io/name: hivebox
+  app.kubernetes.io/part-of: hivebox-platform
+  app.kubernetes.io/managed-by: kustomize
+
+images:
+  - name: hivebox
+    newName: hivebox
+    newTag: "0.3.0"

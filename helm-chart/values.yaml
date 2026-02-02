@@ -1,0 +1,125 @@
+nameOverride: ""
+fullnameOverride: ""
+
+namespace: hivebox
+
+image:
+  repository: hivebox
+  tag: "0.3.0"
+  pullPolicy: IfNotPresent
+
+replicaCount: 2
+
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+  annotations: {}
+
+config:
+  appVersion: "0.3.0"
+  cacheTtl: "60"
+  senseboxId: "5eba5fbad46fb8001b799786"
+  temperaturePhenomenon: "Temperatur"
+  maxDataAgeSeconds: "604800"
+  valkeyHost: "valkey-service"
+  valkeyPort: "6379"
+  minioEndpoint: "minio-service:9000"
+  minioSecure: "false"
+
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsGroup: 1000
+  runAsUser: 1000
+  capabilities:
+    drop:
+      - ALL
+
+initContainers:
+  waitForValkey:
+    enabled: true
+    image:
+      repository: busybox
+      tag: "1.36"
+      pullPolicy: IfNotPresent
+  
+  waitForMinio:
+    enabled: true
+    image:
+      repository: busybox
+      tag: "1.36"
+      pullPolicy: IfNotPresent
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+    ephemeral-storage: 100Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+    ephemeral-storage: 500Mi
+
+probes:
+  startup:
+    enabled: true
+    path: /readyz
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    failureThreshold: 30
+    timeoutSeconds: 5
+  
+  liveness:
+    enabled: true
+    path: /readyz
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  readiness:
+    enabled: true
+    path: /readyz
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+  hosts:
+    - host: hivebox.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+networkPolicy:
+  enabled: true
+  policyTypes:
+    - Ingress
+    - Egress
+
+serviceAccount:
+  create: false
+  automount: false
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

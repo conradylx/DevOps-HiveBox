@@ -101,7 +101,7 @@ Root endpoint returning application version.
 
 **Response:**
 ```json
-{"version": "0.2.0"}
+{"version": "0.3.0"}
 ```
 
 ### `GET /version`
@@ -109,7 +109,7 @@ Returns the current application version.
 
 **Response:**
 ```json
-{"version": "0.2.0"}
+{"version": "0.3.0"}
 ```
 
 ### `GET /temperature`

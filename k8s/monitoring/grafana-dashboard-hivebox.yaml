@@ -1,0 +1,118 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hivebox-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  hivebox-dashboard.json: |
+    {
+      "dashboard": {
+        "title": "HiveBox Monitoring",
+        "tags": ["hivebox", "temperature", "api"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "title": "Temperature Requests",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(hivebox_temperature_requests_total[5m])",
+                "legendFormat": "Requests/sec"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "title": "Cache Hit Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(hivebox_temperature_cache_hits_total[5m]) / (rate(hivebox_temperature_cache_hits_total[5m]) + rate(hivebox_temperature_cache_misses_total[5m])) * 100",
+                "legendFormat": "Hit Rate %"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "title": "Current Temperature",
+            "type": "gauge",
+            "targets": [
+              {
+                "expr": "hivebox_temperature_celsius",
+                "legendFormat": "Temperature"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 8, "x": 0, "y": 8}
+          },
+          {
+            "title": "Valkey Connection",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "hivebox_valkey_connected",
+                "legendFormat": "Connected"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 8, "x": 8, "y": 8}
+          },
+          {
+            "title": "MinIO Connection",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "hivebox_minio_connected",
+                "legendFormat": "Connected"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 8, "x": 16, "y": 8}
+          },
+          {
+            "title": "Available SenseBoxes",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "hivebox_sensebox_available{status='available'}",
+                "legendFormat": "Available"
+              },
+              {
+                "expr": "hivebox_sensebox_available{status='unavailable'}",
+                "legendFormat": "Unavailable"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+          },
+          {
+            "title": "Storage Operations",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(hivebox_storage_operations_total{status='success'}[5m])",
+                "legendFormat": "Success"
+              },
+              {
+                "expr": "rate(hivebox_storage_operations_total{status='error'}[5m])",
+                "legendFormat": "Error"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+          },
+          {
+            "title": "Request Duration",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(hivebox_temperature_request_duration_seconds_bucket[5m]))",
+                "legendFormat": "p95"
+              },
+              {
+                "expr": "histogram_quantile(0.99, rate(hivebox_temperature_request_duration_seconds_bucket[5m]))",
+                "legendFormat": "p99"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 24}
+          }
+        ]
+      }
+    }

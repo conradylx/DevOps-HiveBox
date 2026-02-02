@@ -1,0 +1,107 @@
+namespace: hivebox
+
+image:
+  repository: hivebox
+  tag: "0.3.0"
+  pullPolicy: Never
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+
+config:
+  appVersion: "0.3.0-dev"
+  cacheTtl: "30"
+  senseboxId: "5eba5fbad46fb8001b799786"
+  temperaturePhenomenon: "Temperatur"
+  maxDataAgeSeconds: "604800"
+  valkeyHost: "valkey-service"
+  valkeyPort: "6379"
+  minioEndpoint: "minio-service:9000"
+  minioSecure: "false"
+
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsGroup: 1000
+  runAsUser: 1000
+  capabilities:
+    drop:
+      - ALL
+
+initContainers:
+  waitForValkey:
+    enabled: true
+    image:
+      repository: busybox
+      tag: "1.36"
+      pullPolicy: IfNotPresent
+  waitForMinio:
+    enabled: true
+    image:
+      repository: busybox
+      tag: "1.36"
+      pullPolicy: IfNotPresent
+
+probes:
+  startup:
+    enabled: true
+    path: /readyz
+    initialDelaySeconds: 30
+    periodSeconds: 5
+    failureThreshold: 60
+    timeoutSeconds: 5
+  liveness:
+    enabled: true
+    path: /readyz
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 60
+  readiness:
+    enabled: true
+    path: /readyz
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+serviceAccount:
+  create: false
+  automount: false
+  name: ""
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+    ephemeral-storage: 50Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+    ephemeral-storage: 200Mi
+
+ingress:
+  enabled: false
+
+networkPolicy:
+  enabled: false
+  policyTypes:
+    - Ingress
+    - Egress
+
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

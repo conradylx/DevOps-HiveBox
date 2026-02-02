@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hivebox
+  namespace: hivebox
+  labels:
+    app: hivebox-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hivebox-api
+  template:
+    metadata:
+      labels:
+        app: hivebox-api
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1001
+      initContainers:
+        - name: wait-for-valkey
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z valkey-service 6379; do
+                echo "Waiting for Valkey..."
+                sleep 2
+              done
+              echo "Valkey is up - continuing..."
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+        - name: wait-for-minio
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z minio-service 9000; do
+                echo "Waiting for MinIO..."
+                sleep 2
+              done
+              echo "MinIO is up - continuing..."
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+      containers:
+        - name: hivebox
+          image: hivebox:0.3.0
+          imagePullPolicy: Never # TODO: CHANGE TO IfNotPresent FOR PRODUCTION
+          envFrom:
+            - configMapRef:
+                name: hivebox-config
+          ports:
+            - containerPort: 8000
+              name: http
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+              ephemeral-storage: "1Gi"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+              ephemeral-storage: "2Gi"
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /version
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: cache
+              mountPath: /home/hiveboxusr/.cache
+            - name: pycache
+              mountPath: /code/__pycache__
+      volumes:
+       - name: tmp
+         emptyDir:
+           sizeLimit: 128Mi
+       - name: cache
+         emptyDir:
+           sizeLimit: 256Mi
+       - name: pycache
+         emptyDir:
+           sizeLimit: 50Mi

@@ -1,13 +1,40 @@
 from datetime import datetime, timezone
+import logging
 from typing import List, Optional
 import httpx
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class OpenSenseMapError(Exception):
     """Custom exception for OpenSenseMap API errors."""
 
     pass
+
+
+async def check_senseboxes_availability() -> tuple[int, int]:
+    """Check how many senseBoxes are available"""
+    available = 0
+    total = len(settings.SENSEBOX_IDS)
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        for sensebox_id in settings.SENSEBOX_IDS:
+            try:
+                url = f"{settings.OPENSENSEMAP_API_URL}/boxes/{sensebox_id}"
+                response = await client.get(url, timeout=5.0)
+                if response.status_code == 200:
+                    available += 1
+                    logger.debug(f"SenseBox {sensebox_id}: OK")
+                else:
+                    logger.warning(
+                        f"SenseBox {sensebox_id}: HTTP {response.status_code}"
+                    )
+            except Exception as e:
+                logger.warning(f"SenseBox {sensebox_id} error: {e}")
+
+    logger.info(f"SenseBoxes: {available}/{total} available")
+    return available, total
 
 
 async def fetch_box_data(box_id: str) -> dict:

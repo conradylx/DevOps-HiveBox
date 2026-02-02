@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "hivebox.fullname" . }}-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "hivebox.labels" . | nindent 4 }}
+data:
+  APP_VERSION: {{ .Values.config.appVersion | quote }}
+  CACHE_TTL: {{ .Values.config.cacheTtl | quote }}
+  SENSEBOX_ID: {{ .Values.config.senseboxId | quote }}
+  TEMPERATURE_PHENOMENON: {{ .Values.config.temperaturePhenomenon | quote }}
+  MAX_DATA_AGE_SECONDS: {{ .Values.config.maxDataAgeSeconds | quote }}
+  VALKEY_HOST: {{ .Values.config.valkeyHost | quote }}
+  VALKEY_PORT: {{ .Values.config.valkeyPort | quote }}
+  MINIO_ENDPOINT: {{ .Values.config.minioEndpoint | quote }}
+  MINIO_SECURE: {{ .Values.config.minioSecure | quote }}
