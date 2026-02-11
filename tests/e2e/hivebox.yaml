@@ -1,0 +1,165 @@
+name: Hivebox E2E Tests
+version: "2"
+
+vars:
+  base_url: "http://hivebox.hivebox.svc.cluster.local:8000"
+  timeout: "10s"
+
+testcases:
+  - name: Health check
+    steps:
+      - type: http
+        method: GET
+        url: "{{ .base_url }}/healthz"
+        timeout: 5
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.bodyjson.status ShouldEqual "healthy"
+
+  - name: Version endpoint
+    steps:
+      - type: http
+        method: GET
+        url: "{{ .base_url }}/version"
+        timeout: 10
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.bodyjson.version ShouldNotBeEmpty
+          - result.bodyjson.version ShouldContainSubstring "0."
+  
+  - name: Root Endpoint Returns Version
+    steps:
+      - type: http
+        method: GET
+        url: "{{ .base_url }}/"
+        timeout: 10
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.bodyjson.version ShouldNotBeEmpty
+  
+  - name: Temperature Endpoint - First Call (without cache)
+    steps:
+      - type: http
+        method: GET
+        url: "{{ .base_url }}/temperature"
+        timeout: 30
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.bodyjson.average_temperature ShouldNotBeEmpty
+          - result.bodyjson.unit ShouldEqual "°C"
+          - result.bodyjson.samples ShouldBeGreaterThan 0
+          - result.bodyjson.status ShouldNotBeEmpty
+        vars:
+          first_temp:
+            from: result.bodyjson.average_temperature
+  
+  - name: Temperature Endpoint - Second Call (Cache Hit)
+    steps:
+      - type: http
+        method: GET
+        url: "{{.base_url}}/temperature"
+        timeout: 30
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.bodyjson.average_temperature ShouldNotBeEmpty
+          - result.bodyjson.unit ShouldEqual "°C"
+
+  - name: Readiness Probe
+    steps:
+      - type: http
+        method: GET
+        url: "{{.base_url}}/readyz"
+        timeout: 10 
+        assertions:
+        - result.statuscode ShouldEqual 200
+        - result.bodyjson.status ShouldEqual "ready"
+        - result.bodyjson.valkey ShouldEqual "connected"   
+        - result.bodyjson.minio ShouldEqual "connected"      
+        - result.bodyjson.checks.senseBoxes ShouldEqual "ok" 
+
+  - name: Metrics Endpoint - Prometheus Format
+    steps:
+      - type: http
+        method: GET
+        url: "{{.base_url}}/metrics"
+        timeout: 10
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.body ShouldContainSubstring "hivebox_temperature_requests_total"
+          - result.body ShouldContainSubstring "hivebox_temperature_cache_hits"
+          - result.body ShouldContainSubstring "hivebox_temperature_cache_misses"
+          - result.body ShouldContainSubstring "hivebox_temperature_celsius"
+          - result.body ShouldContainSubstring "hivebox_valkey_connected"
+          - result.body ShouldContainSubstring "hivebox_minio_connected"
+
+  - name: API Documentation - Swagger UI
+    steps:
+      - type: http
+        method: GET
+        url: "{{.base_url}}/docs"
+        timeout: 10
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.body ShouldContainSubstring "swagger"
+
+  - name: OpenAPI Schema
+    steps:
+      - type: http
+        method: GET
+        url: "{{.base_url}}/openapi.json"
+        timeout: 10
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.bodyjson.openapi ShouldNotBeEmpty
+          - result.bodyjson.info.title ShouldContainSubstring "HiveBox"
+
+  - name: Invalid Endpoint - 404
+    steps:
+      - type: http
+        method: GET
+        url: "{{.base_url}}/invalid-endpoint"
+        timeout: 10
+        assertions:
+          - result.statuscode ShouldEqual 404
+
+  - name: Cache Performance Test
+    steps:
+      - type: http
+        method: GET
+        url: "{{.base_url}}/temperature"
+        timeout: 30
+        info: "First request - cache miss"
+        assertions:
+          - result.statuscode ShouldEqual 200
+      
+      - type: exec
+        script: sleep 1
+      
+      - type: http
+        method: GET
+        url: "{{.base_url}}/temperature"
+        timeout: 30
+        info: "Second request - cache hit"
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.timeseconds ShouldBeLessThan 1
+
+  - name: Valkey Connection Check
+    steps:
+      - type: http
+        method: GET
+        url: "{{.base_url}}/readyz"
+        timeout: 10
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.bodyjson.valkey ShouldEqual "connected"
+
+  - name: MinIO Connection Check
+    steps:
+      - type: http
+        method: GET
+        url: "{{.base_url}}/readyz"
+        timeout: 10
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.bodyjson.minio ShouldEqual "connected"

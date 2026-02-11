@@ -41,7 +41,7 @@ spec:
               protocol: TCP
           envFrom:
             - configMapRef:
-                name: hivebox-config
+                name: hivebox-minio-config
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false

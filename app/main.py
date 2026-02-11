@@ -7,7 +7,7 @@ import redis.asyncio as redis
 from fastapi import FastAPI
 
 from app.config.settings import settings
-from app.routers import metrics, version, temperature, readyz
+from app.routers import metrics, storage, version, temperature, readyz
 from app.services.minio_storage import set_minio_client, store_temperature_data
 from app.routers.temperature import set_valkey_client
 from app.services.opensensemap import (
@@ -94,15 +94,10 @@ app.include_router(version.router)
 app.include_router(temperature.router)
 app.include_router(metrics.router)
 app.include_router(readyz.router)
+app.include_router(storage.router)
 
 
 @app.get("/")
 async def root():
     """Root endpoint - returns version."""
     return {"version": settings.VERSION}
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)

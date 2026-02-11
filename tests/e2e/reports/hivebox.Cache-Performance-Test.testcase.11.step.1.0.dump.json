@@ -1,0 +1,30 @@
+{
+ "variables": {
+  "Temperature-Endpoint-First-Call-without-cache.first_temp": "5.79",
+  "__Len__": "18",
+  "__Type__": "Map",
+  "base_url": "http://localhost:8000",
+  "timeout": "10s",
+  "venom.datetime": "2026-02-11T09:47:46+01:00",
+  "venom.executable": "/usr/local/bin/venom",
+  "venom.libdir": "",
+  "venom.outputdir": "./reports",
+  "venom.testcase": "Cache-Performance-Test",
+  "venom.teststep.number": "1",
+  "venom.testsuite": "Hivebox E2E Tests",
+  "venom.testsuite.filename": "hivebox.yaml",
+  "venom.testsuite.filepath": "hivebox.yaml",
+  "venom.testsuite.name": "Hivebox E2E Tests",
+  "venom.testsuite.shortName": "hivebox",
+  "venom.testsuite.workdir": "/home/konrad/Documents/Development/DevOps/DevOps-HiveBox/tests/e2e",
+  "venom.timestamp": "1770799666"
+ },
+ "step": {
+  "script": "sleep 1",
+  "type": "exec"
+ },
+ "result": {
+  "code": "0",
+  "timeseconds": 1.002052575
+ }
+}

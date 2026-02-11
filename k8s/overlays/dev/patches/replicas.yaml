@@ -4,4 +4,4 @@ metadata:
   name: hivebox
   namespace: hivebox
 spec:
-  replicas: 0
+  replicas: 1

@@ -1,0 +1,50 @@
+{
+ "variables": {
+  "Temperature-Endpoint-First-Call-without-cache.first_temp": "5.79",
+  "__Len__": "18",
+  "__Type__": "Map",
+  "base_url": "http://localhost:8000",
+  "timeout": "10s",
+  "venom.datetime": "2026-02-11T09:47:58+01:00",
+  "venom.executable": "/usr/local/bin/venom",
+  "venom.libdir": "",
+  "venom.outputdir": "./reports",
+  "venom.testcase": "Invalid-Endpoint-404",
+  "venom.teststep.number": "0",
+  "venom.testsuite": "Hivebox E2E Tests",
+  "venom.testsuite.filename": "hivebox.yaml",
+  "venom.testsuite.filepath": "hivebox.yaml",
+  "venom.testsuite.name": "Hivebox E2E Tests",
+  "venom.testsuite.shortName": "hivebox",
+  "venom.testsuite.workdir": "/home/konrad/Documents/Development/DevOps/DevOps-HiveBox/tests/e2e",
+  "venom.timestamp": "1770799678"
+ },
+ "step": {
+  "assertions": [
+   "result.statuscode ShouldEqual 404"
+  ],
+  "method": "GET",
+  "timeout": 10,
+  "type": "http",
+  "url": "http://localhost:8000/invalid-endpoint"
+ },
+ "result": {
+  "timeseconds": 0.007348546,
+  "statuscode": 404,
+  "request": {
+   "method": "GET",
+   "url": "http://localhost:8000/invalid-endpoint"
+  },
+  "body": "{\"detail\":\"Not Found\"}",
+  "bodyjson": {
+   "detail": "Not Found"
+  },
+  "headers": {
+   "Content-Length": "22",
+   "Content-Type": "application/json",
+   "Date": "Wed, 11 Feb 2026 08:47:57 GMT",
+   "Server": "uvicorn"
+  },
+  "systemout": "===== Result Info =====\n\t\tMethod:     GET\n\t\tURL:        http://localhost:8000/invalid-endpoint\n\t\tBody:       {\"detail\":\"Not Found\"}\n\t\t======================"
+ }
+}

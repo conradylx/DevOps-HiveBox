@@ -74,25 +74,25 @@ probes:
     enabled: true
     path: /readyz
     initialDelaySeconds: 10
-    periodSeconds: 5
-    failureThreshold: 30
-    timeoutSeconds: 5
+    eriodSeconds: 30
+    failureThreshold: 10
+    timeoutSeconds: 10
   
   liveness:
     enabled: true
     path: /readyz
     initialDelaySeconds: 30
-    periodSeconds: 10
-    timeoutSeconds: 5
-    failureThreshold: 3
+    eriodSeconds: 30
+    failureThreshold: 10
+    timeoutSeconds: 10
   
   readiness:
     enabled: true
     path: /readyz
     initialDelaySeconds: 5
-    periodSeconds: 5
-    timeoutSeconds: 5
-    failureThreshold: 3
+    eriodSeconds: 30
+    failureThreshold: 10
+    timeoutSeconds: 10
 
 ingress:
   enabled: false

@@ -11,3 +11,9 @@ commonLabels:
 resources:
   - minio-deployment.yaml
   - minio-service.yaml
+
+configMapGenerator: 
+- name: hivebox-minio-config
+  literals:
+  - MINIO_ROOT_USER=minioadmin
+  - MINIO_ROOT_PASSWORD=minioadmin

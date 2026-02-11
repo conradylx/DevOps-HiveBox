@@ -1,0 +1,173 @@
+{
+ "variables": {
+  "Temperature-Endpoint-First-Call-without-cache.first_temp": "5.79",
+  "__Len__": "18",
+  "__Type__": "Map",
+  "base_url": "http://localhost:8000",
+  "timeout": "10s",
+  "venom.datetime": "2026-02-11T09:47:58+01:00",
+  "venom.executable": "/usr/local/bin/venom",
+  "venom.libdir": "",
+  "venom.outputdir": "./reports",
+  "venom.testcase": "OpenAPI-Schema",
+  "venom.teststep.number": "0",
+  "venom.testsuite": "Hivebox E2E Tests",
+  "venom.testsuite.filename": "hivebox.yaml",
+  "venom.testsuite.filepath": "hivebox.yaml",
+  "venom.testsuite.name": "Hivebox E2E Tests",
+  "venom.testsuite.shortName": "hivebox",
+  "venom.testsuite.workdir": "/home/konrad/Documents/Development/DevOps/DevOps-HiveBox/tests/e2e",
+  "venom.timestamp": "1770799678"
+ },
+ "step": {
+  "assertions": [
+   "result.statuscode ShouldEqual 200",
+   "result.bodyjson.openapi ShouldNotBeEmpty",
+   "result.bodyjson.info.title ShouldContainSubstring \"HiveBox\""
+  ],
+  "method": "GET",
+  "timeout": 10,
+  "type": "http",
+  "url": "http://localhost:8000/openapi.json"
+ },
+ "result": {
+  "timeseconds": 0.00804592,
+  "statuscode": 200,
+  "request": {
+   "method": "GET",
+   "url": "http://localhost:8000/openapi.json"
+  },
+  "body": "{\"openapi\":\"3.1.0\",\"info\":{\"title\":\"HiveBox\",\"description\":\"API to track environmental sensor data for beekeepers\",\"version\":\"0.3.0\"},\"paths\":{\"/version\":{\"get\":{\"summary\":\"Get Version\",\"description\":\"Get the current application version.\\n\\nReturns:\\n    dict: Version information\",\"operationId\":\"get_version_version_get\",\"responses\":{\"200\":{\"description\":\"Successful Response\",\"content\":{\"application/json\":{\"schema\":{}}}}}}},\"/temperature\":{\"get\":{\"tags\":[\"temperature\"],\"summary\":\"Get Temperature\",\"description\":\"Get average temperature from configured senseBoxes\\n\\n- Data must be no older than 1 hour\\n- Uses Valkey cache (5 minute TTL)\\n- Returns temperature with status based on thresholds\\n- Increments Prometheus metrics\",\"operationId\":\"get_temperature_temperature_get\",\"responses\":{\"200\":{\"description\":\"Successful Response\",\"content\":{\"application/json\":{\"schema\":{}}}}}}},\"/metrics\":{\"get\":{\"tags\":[\"metrics\"],\"summary\":\"Get Metrics\",\"description\":\"Prometheus metrics endpoint\\nReturns all default and custom metrics in Prometheus format\",\"operationId\":\"get_metrics_metrics_get\",\"responses\":{\"200\":{\"description\":\"Successful Response\",\"content\":{\"application/json\":{\"schema\":{}}}}}}},\"/healthz\":{\"get\":{\"tags\":[\"readiness\"],\"summary\":\"Healthz\",\"description\":\"Liveness probe endpoint for Kubernetes.\\nReturns 200 if app is alive (can handle requests).\",\"operationId\":\"healthz_healthz_get\",\"responses\":{\"200\":{\"description\":\"Successful Response\",\"content\":{\"application/json\":{\"schema\":{}}}}}}},\"/readyz\":{\"get\":{\"tags\":[\"readiness\"],\"summary\":\"Readyz\",\"description\":\"Kubernetes readiness probe\\n\\nReturns HTTP 200 only if:\\n- Less than 50% of senseBoxes are unavailable\\n- AND cache is not older than 5 minutes\",\"operationId\":\"readyz_readyz_get\",\"responses\":{\"200\":{\"description\":\"Successful Response\",\"content\":{\"application/json\":{\"schema\":{}}}}}}},\"/\":{\"get\":{\"summary\":\"Root\",\"description\":\"Root endpoint - returns version.\",\"operationId\":\"root__get\",\"responses\":{\"200\":{\"description\":\"Successful Response\",\"content\":{\"application/json\":{\"schema\":{}}}}}}}}}",
+  "bodyjson": {
+   "info": {
+    "description": "API to track environmental sensor data for beekeepers",
+    "title": "HiveBox",
+    "version": "0.3.0"
+   },
+   "openapi": "3.1.0",
+   "paths": {
+    "/": {
+     "get": {
+      "description": "Root endpoint - returns version.",
+      "operationId": "root__get",
+      "responses": {
+       "200": {
+        "content": {
+         "application/json": {
+          "schema": {}
+         }
+        },
+        "description": "Successful Response"
+       }
+      },
+      "summary": "Root"
+     }
+    },
+    "/healthz": {
+     "get": {
+      "description": "Liveness probe endpoint for Kubernetes.\nReturns 200 if app is alive (can handle requests).",
+      "operationId": "healthz_healthz_get",
+      "responses": {
+       "200": {
+        "content": {
+         "application/json": {
+          "schema": {}
+         }
+        },
+        "description": "Successful Response"
+       }
+      },
+      "summary": "Healthz",
+      "tags": [
+       "readiness"
+      ]
+     }
+    },
+    "/metrics": {
+     "get": {
+      "description": "Prometheus metrics endpoint\nReturns all default and custom metrics in Prometheus format",
+      "operationId": "get_metrics_metrics_get",
+      "responses": {
+       "200": {
+        "content": {
+         "application/json": {
+          "schema": {}
+         }
+        },
+        "description": "Successful Response"
+       }
+      },
+      "summary": "Get Metrics",
+      "tags": [
+       "metrics"
+      ]
+     }
+    },
+    "/readyz": {
+     "get": {
+      "description": "Kubernetes readiness probe\n\nReturns HTTP 200 only if:\n- Less than 50% of senseBoxes are unavailable\n- AND cache is not older than 5 minutes",
+      "operationId": "readyz_readyz_get",
+      "responses": {
+       "200": {
+        "content": {
+         "application/json": {
+          "schema": {}
+         }
+        },
+        "description": "Successful Response"
+       }
+      },
+      "summary": "Readyz",
+      "tags": [
+       "readiness"
+      ]
+     }
+    },
+    "/temperature": {
+     "get": {
+      "description": "Get average temperature from configured senseBoxes\n\n- Data must be no older than 1 hour\n- Uses Valkey cache (5 minute TTL)\n- Returns temperature with status based on thresholds\n- Increments Prometheus metrics",
+      "operationId": "get_temperature_temperature_get",
+      "responses": {
+       "200": {
+        "content": {
+         "application/json": {
+          "schema": {}
+         }
+        },
+        "description": "Successful Response"
+       }
+      },
+      "summary": "Get Temperature",
+      "tags": [
+       "temperature"
+      ]
+     }
+    },
+    "/version": {
+     "get": {
+      "description": "Get the current application version.\n\nReturns:\n    dict: Version information",
+      "operationId": "get_version_version_get",
+      "responses": {
+       "200": {
+        "content": {
+         "application/json": {
+          "schema": {}
+         }
+        },
+        "description": "Successful Response"
+       }
+      },
+      "summary": "Get Version"
+     }
+    }
+   }
+  },
+  "headers": {
+   "Content-Length": "2072",
+   "Content-Type": "application/json",
+   "Date": "Wed, 11 Feb 2026 08:47:57 GMT",
+   "Server": "uvicorn"
+  },
+  "systemout": "===== Result Info =====\n\t\tMethod:     GET\n\t\tURL:        http://localhost:8000/openapi.json\n\t\tBody:       {\"info\":{\"description\":\"API to track environmental sensor data for beekeepers\",\"title\":\"HiveBox\",\"version\":\"0.3.0\"},\"openapi\":\"3.1.0\",\"paths\":{\"/\":{\"get\":{\"description\":\"Root endpoint - returns version.\",\"operationId\":\"root__get\",\"responses\":{\"200\":{\"content\":{\"application/json\":{\"schema\":{}}},\"description\":\"Successful Response\"}},\"summary\":\"Root\"}},\"/healthz\":{\"get\":{\"description\":\"Liveness probe endpoint for Kubernetes.\\nReturns 200 if app is alive (can handle requests).\",\"operationId\":\"healthz_healthz_get\",\"responses\":{\"200\":{\"content\":{\"application/json\":{\"schema\":{}}},\"description\":\"Successful Response\"}},\"summary\":\"Healthz\",\"tags\":[\"readiness\"]}},\"/metrics\":{\"get\":{\"description\":\"Prometheus metrics endpoint\\nReturns all default and custom metrics in Prometheus format\",\"operationId\":\"get_metrics_metrics_get\",\"responses\":{\"200\":{\"content\":{\"application/json\":{\"schema\":{}}},\"description\":\"Successful Response\"}},\"summary\":\"Get Metrics\",\"tags\":[\"metrics\"]}},\"/readyz\":{\"get\":{\"description\":\"Kubernetes readiness probe\\n\\nReturns HTTP 200 only if:\\n- Less than 50% of senseBoxes are unavailable\\n- AND cache is not older than 5 minutes\",\"operationId\":\"readyz_readyz_get\",\"responses\":{\"200\":{\"content\":{\"application/json\":{\"schema\":{}}},\"description\":\"Successful Response\"}},\"summary\":\"Readyz\",\"tags\":[\"readiness\"]}},\"/temperature\":{\"get\":{\"description\":\"Get average temperature from configured senseBoxes\\n\\n- Data must be no older than 1 hour\\n- Uses Valkey cache (5 minute TTL)\\n- Returns temperature with status based on thresholds\\n- Increments Prometheus metrics\",\"operationId\":\"get_temperature_temperature_get\",\"responses\":{\"200\":{\"content\":{\"application/json\":{\"schema\":{}}},\"description\":\"Successful Response\"}},\"summary\":\"Get Temperature\",\"tags\":[\"temperature\"]}},\"/version\":{\"get\":{\"description\":\"Get the current application version.\\n\\nReturns:\\n    dict: Version information\",\"operationId\":\"get_version_version_get\",\"responses\":{\"200\":{\"content\":{\"application/json\":{\"schema\":{}}},\"description\":\"Successful Response\"}},\"summary\":\"Get Version\"}}}}\n\t\t======================"
+ }
+}

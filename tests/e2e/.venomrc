@@ -1,0 +1,4 @@
+format: json
+output_dir: tests/e2e/reports
+stop_on_failure: false
+verbosity: 2

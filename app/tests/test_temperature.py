@@ -18,7 +18,7 @@ client = TestClient(app)
 SAMPLE_BOX_DATA = {
     "sensors": [
         {
-            "title": "Temperature",
+            "title": "Temperatur",
             "lastMeasurement": {
                 "value": "22.5",
                 "createdAt": datetime.now(timezone.utc).isoformat(),
