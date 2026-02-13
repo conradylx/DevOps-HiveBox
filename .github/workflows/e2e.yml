@@ -1,0 +1,149 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  e2e-tests:
+    name: End-to-End Tests with Venom
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Read version
+        id: version
+        run: |
+          VERSION=$(cat app/version.txt | tr -d '\n\r')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Testing version: $VERSION"
+    
+      - name: Set up Minikube
+        uses: medyagh/setup-minikube@e9e035a86bbc3caea26a450bd4dbf9d0c453682e
+        with:
+          driver: docker
+          cpus: 2
+          memory: 4096
+          kubernetes-version: v1.28.0
+    
+      - name: Verify Minikube
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+    
+      - name: Enable Minikube addons
+        run: |
+          minikube addons enable ingress
+          minikube addons enable metrics-server
+
+      - name: Build docker image
+        run: |
+          eval $(minikube docker-env)
+          docker build -t hivebox:${VERSION} -f app/Dockerfile app/
+          docker images | grep hivebox
+
+      - name: Create namespace
+        run: |
+          kubectl create namespace hivebox || true
+      
+      - name: Deploy infrastructure (Valkey)
+        run: |
+          kubectl apply -k k8s/infrastructure/valkey/
+          kubectl wait --for=condition=ready pod -l app=valkey -n hivebox --timeout=300s
+      
+      - name: Deploy infrastructure (MinIO)
+        run: |
+          kubectl apply -k k8s/infrastructure/minio/
+          
+          kubectl wait --for=jsonpath='{.status.containerStatuses[?(@.ready)].name}'=minio \
+            pod -l app=minio -n hivebox --timeout=180s
+          
+          kubectl rollout status deployment/minio -n hivebox --timeout=180s
+
+      - name: Deploy HiveBox application
+        run: |
+          kubectl apply -k k8s/overlays/dev/
+          sleep 15
+          kubectl wait --for=condition=ready pod -l app=hivebox-api -n hivebox --timeout=240s
+      
+      - name: Check deployment status
+        run: |
+          kubectl get all -n hivebox
+          kubectl describe pods -n hivebox
+      
+      - name: Check application logs
+        if: always()
+        run: |
+          echo "=== HiveBox Logs ==="
+          kubectl logs -n hivebox -l app=hivebox-api --tail=50 || true
+          echo "=== Valkey Logs ==="
+          kubectl logs -n hivebox -l app=valkey --tail=30 || true
+          echo "=== MinIO Logs ==="
+          kubectl logs -n hivebox -l app=minio --tail=30 || true
+      
+      - name: Install Venom
+        run: |
+          curl -L --proto '=https' --tlsv1.2 -sSf \
+            https://github.com/ovh/venom/releases/download/v1.2.0/venom.linux-amd64 \
+            -o venom
+          chmod +x venom
+          sudo mv venom /usr/local/bin/
+          venom version
+      
+      - name: Port forward HiveBox service
+        run: |
+          kubectl port-forward -n hivebox svc/hivebox 8000:8000 &
+          for i in {1..30}; do
+            if curl -sf http://localhost:8000/healthz > /dev/null 2>&1; then
+              echo "✓ HiveBox is ready"
+              break
+            fi
+            echo "Waiting for HiveBox... ($i/30)"
+            sleep 2
+          done
+          curl -f http://localhost:8000/healthz || exit 1
+      
+      - name: Run E2E tests with Venom
+        run: |
+          cd tests/e2e
+          ls -la
+          echo "Running Venom tests..."
+          venom run hivebox.yaml --format=xml --output-dir=./reports
+        env:
+          VENOM_VAR_base_url: http://localhost:8000
+      
+      - name: Upload Venom test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: venom-test-results
+          path: tests/e2e/reports/
+          retention-days: 30
+      
+      - name: Test Summary
+        if: always()
+        run: |
+          if [ -f tests/e2e/reports/test_results_hivebox.xml ]; then
+            echo "### E2E Test Results" >> $GITHUB_STEP_SUMMARY
+            echo "✅ Tests completed. See artifacts for details." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ No test results found" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Cleanup
+        if: always()
+        run: |
+          kubectl delete namespace hivebox --ignore-not-found=true
+          minikube delete

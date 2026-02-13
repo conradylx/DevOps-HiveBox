@@ -1,0 +1,54 @@
+image:
+  repository: ghcr.io/your-username/hivebox
+  tag: "0.3.0"
+  pullPolicy: Always
+
+replicaCount: 3
+
+config:
+  appVersion: "0.3.0"
+  cacheTtl: "300"
+  senseboxId: "5eba5fbad46fb8001b799786"
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+    ephemeral-storage: 200Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+    ephemeral-storage: 1Gi
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+  hosts:
+    - host: hivebox.yourdomain.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: hivebox-tls
+      hosts:
+        - hivebox.yourdomain.com
+
+networkPolicy:
+  enabled: true
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - hivebox
+          topologyKey: kubernetes.io/hostname

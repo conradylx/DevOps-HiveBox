@@ -1,0 +1,162 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  trivy-scan:
+    name: Trivy Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Read version
+        id: version
+        run: |
+          VERSION=$(cat app/version.txt | tr -d '\n\r')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      
+      - name: Build Docker image for scanning
+        run: |
+          docker build -t hivebox:${VERSION} -f app/Dockerfile app/
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@6e7b7d1fd3e4fef0c5fa8cce1229c54b2c9bd0d8 # v0.28.0
+        with:
+          image-ref: 'hivebox:${{ env.VERSION }}'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'
+        env:
+          TRIVY_SKIP_DIRS: .git,.cache
+      
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+      
+      - name: Run Trivy in table format
+        uses: aquasecurity/trivy-action@6e7b7d1fd3e4fef0c5fa8cce1229c54b2c9bd0d8 # v0.28.0
+        with:
+          image-ref: 'hivebox:${{ env.VERSION }}'
+          format: 'table'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+        continue-on-error: true
+      
+      - name: Generate vulnerability report
+        if: always()
+        uses: aquasecurity/trivy-action@6e7b7d1fd3e4fef0c5fa8cce1229c54b2c9bd0d8 # v0.28.0
+        with:
+          image-ref: 'hivebox:${{ env.VERSION }}'
+          format: 'json'
+          output: 'trivy-report.json'
+        continue-on-error: true
+      
+      - name: Upload vulnerability report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-vulnerability-report
+          path: trivy-report.json
+          retention-days: 30
+      
+      - name: Security Summary
+        if: always()
+        run: |
+          echo "### Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** hivebox:${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f trivy-report.json ]; then
+            VULN_COUNT=$(jq '.Results[0].Vulnerabilities | length // 0' trivy-report.json 2>/dev/null || echo "0")
+            echo "**Vulnerabilities found:** $VULN_COUNT" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  dockerfile-scan:
+    name: Dockerfile Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run Trivy config scan on Dockerfile
+        uses: aquasecurity/trivy-action@6e7b7d1fd3e4fef0c5fa8cce1229c54b2c9bd0d8 # v0.28.0
+        with:
+          scan-type: 'config'
+          scan-ref: 'app/Dockerfile'
+          format: 'sarif'
+          output: 'dockerfile-results.sarif'
+          exit-code: '0'
+          severity: 'CRITICAL,HIGH'
+        env:
+          TRIVY_SKIP_DIRS: .git,.cache
+      
+      - name: Upload Dockerfile scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'dockerfile-results.sarif'
+
+  k8s-manifest-scan:
+    name: Kubernetes Manifest Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run Trivy on Kubernetes manifests (table)
+        uses: aquasecurity/trivy-action@6e7b7d1fd3e4fef0c5fa8cce1229c54b2c9bd0d8 # v0.28.0
+        with:
+          scan-type: 'config'
+          scan-ref: 'k8s/'
+          format: 'table'
+          exit-code: '0'
+          severity: 'CRITICAL,HIGH'
+        env:
+          TRIVY_SKIP_DIRS: .git,.cache
+        continue-on-error: true
+      
+      - name: Run Trivy on Kubernetes manifests (SARIF)
+        uses: aquasecurity/trivy-action@6e7b7d1fd3e4fef0c5fa8cce1229c54b2c9bd0d8 # v0.28.0
+        with:
+          scan-type: 'config'
+          scan-ref: 'k8s/'
+          format: 'sarif'
+          output: 'k8s-results.sarif'
+          exit-code: '0'
+          severity: 'CRITICAL,HIGH'
+        env:
+          TRIVY_SKIP_DIRS: .git,.cache
+      
+      - name: Upload K8s scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'k8s-results.sarif'

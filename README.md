@@ -1,3 +1,7 @@
+![CI Pipeline](https://github.com/conradylx/DevOps-HiveBox/workflows/CI%20Pipeline/badge.svg)
+![CD Pipeline](https://github.com/conradylx/DevOps-HiveBox/workflows/CD%20Pipeline/badge.svg)
+[![codecov](https://codecov.io/gh/conradylx/DevOps-HiveBox/graph/badge.svg?token=X43GELVCX6)](https://codecov.io/gh/conradylx/DevOps-HiveBox)
+
 # DevOps HiveBox
 
 A real-world DevOps end-to-end project following the [DevOps Roadmap - HiveBox Project](https://devopsroadmap.io/projects/hivebox/).
@@ -25,12 +29,20 @@ HiveBox is a scalable RESTful API built around [openSenseMap](https://opensensem
 - 3.4 CI: GitHub Actions pipeline with linting, testing, and security scanning
 - 3.5 Testing: Unit tests (100% coverage) and integration tests in CI
 
-✅ **Phase 4**:  Expand - Constructing a Shell - COMPLETED
+✅ **Phase 4**: Expand - Constructing a Shell - COMPLETED
 - 4.1 Tools: Kind and Kubectl configured
 - 4.2 Code: `/metrics` endpoint with Prometheus, temperature status field
 - 4.3 Containers: Kubernetes manifests (Deployment, Service, Ingress, - ConfigMap, NetworkPolicy)
 - 4.4 CI: Extended pipeline with SonarQube and Terrascan
 - 4.5 CD: GitHub Actions workflow for GHCR publishing
+
+✅ **Phase 5**: Transform - Finishing the Structure - COMPLETED
+- 5.1 Tools: Kubernetes, kubectl, Helm
+- 5.2 Code: Valkey caching, MinIO storage, /store, /metrics, /readyz, /healthz endpoints
+- 5.3 Containers: Helm chart, Kustomize overlays, security best practices
+- 5.4 Infrastructure as Code: Prometheus + Grafana monitoring stack
+- 5.5 CI: End-to-End tests with Venom (13 tests passing)
+- 5.6 CD: Security scanning with Trivy, best practices
 
 ## Project Structure
 
@@ -39,7 +51,9 @@ DevOps-HiveBox/
 ├── .github/
 │   └── workflows/
 │       ├── ci.yml           # CI pipeline
-│       └── cd.yml           # CD pipeline
+│       ├── cd.yml           # CD pipeline
+│       ├── e2e.yml          # E2E tests with Venom
+│       └── security-scan.yml # Trivy security scanning
 ├── app/
 │   ├── config/
 │   │   ├── __init__.py
@@ -64,14 +78,66 @@ DevOps-HiveBox/
 │   ├── requirements.txt     # Python dependencies
 │   ├── requirements-dev.txt # Python dev dependencies
 │   └── version.txt          # Stores current app version
+├── helm-chart/              # Helm chart for deployment
+│   ├── Chart.yaml
+│   ├── values.yaml          # Default values
+│   ├── values-dev.yaml      # Development environment
+│   ├── values-prod.yaml     # Production environment
+│   └── templates/
+│       ├── deployment.yaml
+│       ├── service.yaml
+│       ├── ingress.yaml
+│       ├── configmap.yaml
+│       ├── networkpolicy.yaml
+│       └── _helpers.tpl
 ├── k8s/                     # Kubernetes manifests
-│   ├── configmap.yaml       # ConfigMap for env vars
-│   ├── deployment.yaml      # Deployment manifest
-│   ├── service.yaml         # Service manifest
-│   ├── ingress.yaml         # Ingress manifest
-│   ├── namespace.yaml       # Namespace definition
-│   └── networkpolicy.yaml   # Network policy
-├── kind-config.yaml         # KIND cluster configuration
+│   ├── base/                # Base manifests
+│   │   ├── namespace.yaml
+│   │   ├── configmap.yaml
+│   │   ├── deployment.yaml
+│   │   ├── service.yaml
+│   │   ├── ingress.yaml
+│   │   ├── networkpolicy.yaml
+│   │   └── kustomization.yaml
+│   ├── infrastructure/      # Infrastructure components
+│   │   ├── valkey/         # Valkey cache
+│   │   │   ├── deployment.yaml
+│   │   │   ├── service.yaml
+│   │   │   └── kustomization.yaml
+│   │   └── minio/          # MinIO storage
+│   │       ├── deployment.yaml
+│   │       ├── service.yaml
+│   │       └── kustomization.yaml
+│   ├── overlays/           # Environment-specific configs
+│   │   ├── dev/
+│   │   │   ├── kustomization.yaml
+│   │   │   └── patches/
+│   │   │       ├── configmap.yaml
+│   │   │       ├── image.yaml
+│   │   │       └── replicas.yaml
+│   │   ├── stg/
+│   │   │   ├── kustomization.yaml
+│   │   │   └── patches/
+│   │   │       ├── configmap.yaml
+│   │   │       ├── image.yaml
+│   │   │       └── replicas.yaml
+│   │   └── prod/
+│   │       ├── kustomization.yaml
+│   │   │   └── patches/
+│   │   │       ├── configmap.yaml
+│   │   │       ├── image.yaml
+│   │   │       └── replicas.yaml
+│   └── monitoring/         # Monitoring stack
+│       ├── monitoring-values.yaml
+│       ├── service-monitor.yaml
+│       ├── grafana-values.yaml
+│       └── grafana-dashboard-hivebox.yaml
+├── tests/e2e/              # End-to-End tests
+│   ├── hivebox.yaml        # Venom test suite (13 tests)
+│   ├── .venomrc            # Venom configuration
+│   └── reports/            # Test reports
+├── scripts/
+│   └── run-e2e-tests.sh    # Local E2E testing script
 ├── .coveragerc              # Coverage.py configuration
 ├── .pylintrc                # Pylint configuration
 ├── pytest.ini               # Pytest configuration
@@ -82,6 +148,21 @@ DevOps-HiveBox/
 ```
 
 ## Technologies Used
+
+### Phase 5 Stack
+- **Caching**: Valkey 8.0.1 (Redis-compatible)
+- **Storage**: MinIO (S3-compatible)
+- **Orchestration**: Helm 3.x, Kustomize
+- **Monitoring**: Prometheus + Grafana (kube-prometheus-stack)
+- **E2E Testing**: Venom
+- **Security Scanning**: Trivy, Kubesec
+
+### Phase 4 Stack
+- **Orchestration**: Kubernetes 1.28+
+- **Ingress**: NGINX Ingress Controller
+- **Container Registry**: GitHub Container Registry (ghcr.io)
+- **Code Quality**: SonarQube
+- **Security**: Terrascan, OpenSSF Scorecard
 
 ### Phase 3 Stack
 - **Language**: Python 3.13
@@ -101,7 +182,7 @@ Root endpoint returning application version.
 
 **Response:**
 ```json
-{"version": "0.2.0"}
+{"version": "0.3.0"}
 ```
 
 ### `GET /version`
@@ -109,7 +190,7 @@ Returns the current application version.
 
 **Response:**
 ```json
-{"version": "0.2.0"}
+{"version": "0.3.0"}
 ```
 
 ### `GET /temperature`
@@ -120,7 +201,8 @@ Returns average temperature from all configured senseBoxes with data no older th
 {
   "average_temperature": 22.5,
   "unit": "°C",
-  "samples": 3
+  "samples": 3,
+  "status": "Good"
 }
 ```
 
@@ -144,6 +226,44 @@ hivebox_temperature_requests_total 42.0
 hivebox_version_requests_total 128.0
 ```
 
+### `GET /store`
+Force immediate storage of current temperature data to MinIO.
+
+**Response:**
+```json
+{
+  "status": "success",
+  "message": "Data stored to MinIO",
+  "filename": "temperature_manual_20250129_143022.json",
+  "timestamp": "2025-01-29T14:30:22.123456Z"
+}
+```
+
+### `GET /readyz`
+Readiness probe with intelligent health checking.
+
+**Response:**
+```json
+{
+  "status": "ready",
+  "valkey": "connected",
+  "minio": "connected",
+  "checks": {
+    "senseBoxes": "ok"
+  }
+}
+```
+
+### `GET /healthz`
+Liveness probe for Kubernetes health checks.
+
+**Response:**
+```json
+{
+  "status": "healthy"
+}
+```
+
 ## Quick Start
 
 ### Prerequisites
@@ -153,6 +273,7 @@ hivebox_version_requests_total 128.0
 - Python 3.13+ (for local development)
 - kubectl 1.28+ (for Kubernetes)
 - KIND 0.20+ or Minikube (for local Kubernetes cluster)
+- Helm 3.x (for Helm deployments)
 
 ### Running with Docker Compose
 
@@ -177,6 +298,15 @@ curl http://localhost:8000/temperature
 
 # Metrics endpoint
 curl http://localhost:8000/metrics
+
+# Store endpoint
+curl -X POST http://localhost:8000/store
+
+# Readiness check
+curl http://localhost:8000/readyz
+
+# Health check
+curl http://localhost:8000/healthz
 ```
 
 4. View logs:
@@ -189,18 +319,84 @@ docker compose logs -f web
 docker compose down
 ```
 
-### Running on Kubernetes
+### Running on Kubernetes with Helm (Recommended)
 ```bash
-minikube start
-minikube addons enable ingress
+# Start Minikube
+minikube start --cpus=4 --memory=8192
 
-docker build -t ghcr.io/conradylx/devops-hivebox:latest app/
-minikube image load ghcr.io/conradylx/devops-hivebox:latest
-minikube apply -f ./k8s/namespace.yaml
-minikube apply -f ./k8s
+# Enable addons
+minikube addons enable ingress
+minikube addons enable metrics-server
+
+# Build image in Minikube
+eval $(minikube docker-env)
+VERSION=$(cat app/version.txt)
+docker build -t hivebox:${VERSION} -f app/Dockerfile app/
+eval $(minikube docker-env -u)
+
+# Install with Helm
+helm install hivebox helm-chart/ \
+  --namespace hivebox \
+  --create-namespace \
+  -f helm-chart/values-dev.yaml \
+  --set image.tag=${VERSION} \
+  --set image.pullPolicy=Never
 
 # Check status
-kubectl get pods -n hivebox-dev
+helm status hivebox -n hivebox
+kubectl get all -n hivebox
+
+# Access application
+kubectl port-forward -n hivebox svc/hivebox 8000:8000
+curl http://localhost:8000/version
+```
+
+### Running on Kubernetes with Kustomize
+```bash
+# Start Minikube
+minikube start --cpus=4 --memory=8192
+minikube addons enable ingress
+
+# Build image
+eval $(minikube docker-env)
+docker build -t hivebox:0.3.0 -f app/Dockerfile app/
+eval $(minikube docker-env -u)
+
+# Deploy to dev environment
+kubectl apply -k k8s/overlays/dev/
+
+# Check status
+kubectl get all -n hivebox
+
+# Deploy to staging
+kubectl apply -k k8s/overlays/stg/
+
+# Deploy to production
+kubectl apply -k k8s/overlays/prod/
+```
+
+### Monitoring Stack (Prometheus + Grafana)
+```bash
+# Add Helm repo
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+
+# Install Prometheus + Grafana
+helm install prometheus prometheus-community/kube-prometheus-stack \
+  --namespace monitoring \
+  --create-namespace \
+  -f k8s/monitoring/monitoring-values.yaml
+
+# Deploy ServiceMonitor
+kubectl apply -f k8s/monitoring/service-monitor.yaml
+
+# Access Grafana
+kubectl port-forward -n monitoring svc/prometheus-grafana 3000:80
+# Open: http://localhost:3000 (admin/admin)
+
+# Access Prometheus
+kubectl port-forward -n monitoring svc/prometheus-kube-prometheus-prometheus 9090:9090
+# Open: http://localhost:9090
 ```
 
 ### Local Development
@@ -241,6 +437,36 @@ pytest tests/test_version.py -v
 pytest -v
 ```
 
+### End-to-End Tests (Phase 5)
+```bash
+# Make script executable
+chmod +x scripts/run-e2e-tests.sh
+
+# Deploy application first
+kubectl apply -k k8s/overlays/dev/
+
+# Run E2E tests
+./scripts/run-e2e-tests.sh
+
+# Test reports available in: tests/e2e/reports/
+```
+
+E2E Test Coverage:
+
+- ✅ Health check endpoint
+- ✅ Version endpoint
+- ✅ Root endpoint
+- ✅ Temperature endpoint (cache miss)
+- ✅ Temperature endpoint (cache hit)
+- ✅ Readiness probe logic
+- ✅ Metrics endpoint format
+- ✅ API documentation
+- ✅ OpenAPI schema
+- ✅ Invalid endpoints (404)
+- ✅ Cache performance
+- ✅ Valkey connection
+- ✅ MinIO connection
+
 ### Code Quality
 
 ```bash
@@ -270,6 +496,51 @@ The project includes the following Kubernetes resources:
 - Ingress: Routes external traffic to the service
 - NetworkPolicy: Controls pod-to-pod communication
 
+### Helm Chart
+Multi-environment deployment with Helm:
+```bash
+# Install
+helm install hivebox helm-chart/ -n hivebox --create-namespace -f helm-chart/values-dev.yaml
+
+# Upgrade
+helm upgrade hivebox helm-chart/ -f helm-chart/values-dev.yaml
+
+# Uninstall
+helm uninstall hivebox -n hivebox
+
+# View values
+helm get values hivebox -n hivebox
+```
+
+### Monitoring with Prometheus and Grafana
+Custom Metrics:
+
+- hivebox_temperature_requests_total - Total temperature requests
+- hivebox_temperature_cache_hits - Cache hits counter
+- hivebox_temperature_cache_misses - Cache misses counter
+- hivebox_temperature_celsius - Current temperature gauge
+- hivebox_temperature_request_duration_seconds - Request duration histogram
+- hivebox_valkey_connected - Valkey connection status (1/0)
+- hivebox_minio_connected - MinIO connection status (1/0)
+- hivebox_sensebox_available - Available senseBoxes count
+- hivebox_storage_operations_total - Storage operations counter
+
+## Useful Prometheus Queries
+```promql
+# Request rate
+rate(hivebox_temperature_requests_total[5m])
+
+# Cache hit ratio
+rate(hivebox_temperature_cache_hits[5m]) / 
+(rate(hivebox_temperature_cache_hits[5m]) + rate(hivebox_temperature_cache_misses[5m])) * 100
+
+# Current temperature
+hivebox_temperature_celsius
+
+# Request duration p95
+histogram_quantile(0.95, rate(hivebox_temperature_request_duration_seconds_bucket[5m]))
+```
+
 ## CI/CD Pipeline
 
 The project uses GitHub Actions for continuous integration:
@@ -290,8 +561,38 @@ The project uses GitHub Actions for continuous integration:
 - Push to: `main`, `develop`, `feat/**`, `fix/**`
 - Pull requests to: `main`
 
+## End-to-End Tests
+Pipeline Steps:
+
+1. Setup Minikube cluster
+2. Deploy infrastructure (Valkey, MinIO)
+3. Deploy HiveBox application
+4. Run 13 Venom E2E tests
+5. Upload test reports
+
+### Triggers
+- Pull requests to main
+- Push to main, develop
+- Manual workflow dispatch
+
+## Security scanning
+Security Scanning 
+- Trivy Image Scan: Docker image vulnerabilities
+- Trivy Dockerfile Scan: Dockerfile misconfigurations
+- Trivy K8s Scan: Kubernetes manifest issues
+- Kubesec: K8s security best practices
+
+### Triggers
+- Push to main, develop
+- Pull requests to main
+- Daily schedule (2 AM UTC)
+
 ## Continuous Deployment (CD)
 Automated deployment to GitHub Container Registry (GHCR):
+- Read version from app/version.txt
+- Build Docker image with version tag
+- Push to GitHub Container Registry
+- Generate build provenance attestation
 
 ### Published images:
 
@@ -303,13 +604,6 @@ Automated deployment to GitHub Container Registry (GHCR):
 
 - Push to: `main`
 - Git tags (e.g., v0.1.0)
-
-
-### Status Badges
-
-![CI Pipeline](https://github.com/conradylx/DevOps-HiveBox/workflows/CI%20Pipeline/badge.svg)
-![CD Pipeline](https://github.com/conradylx/DevOps-HiveBox/workflows/CD%20Pipeline/badge.svg)
-[![codecov](https://codecov.io/gh/conradylx/DevOps-HiveBox/graph/badge.svg?token=X43GELVCX6)](https://codecov.io/gh/conradylx/DevOps-HiveBox)
 
 ## Security Features
 
@@ -365,6 +659,7 @@ This project follows best practices:
    - `docs:` documentation
    - `test:` tests
    - `ci:` CI/CD changes
+   - `k8s`: Kubernetes changes
    - `refactor:` code refactoring
 3. **Pull Requests**: All changes via PR to `main`
 4. **Code Review**: Required before merging
@@ -393,6 +688,8 @@ git push origin feat/add-humidity-endpoint
 - Mock external API calls
 - Test error scenarios
 - Prometheus metrics validation
+- Valkey cache behavior
+- MinIO storage operations
 
 ### Integration Tests
 - Docker container validation
@@ -410,6 +707,15 @@ git push origin feat/add-humidity-endpoint
 - Pod security context
 - Resource limits enforcement
 - Network policy validation
+
+### End-to-End Tests
+
+- 13 Venom test cases
+- Full application flow testing
+- Cache performance validation
+- Infrastructure connectivity
+- API documentation checks
+- Error handling verification
 
 ### Test Coverage Report
 ```bash
@@ -448,7 +754,7 @@ pytest --cov=. --cov-report=html
 - [x] Integration test for `/version`
 - [x] OpenSSF Scorecard integration
 
-### Phase 4 (Upcoming)
+### Phase 4 ✅
 - [x] Kubernetes deployment
 - [x] Kubernetes manifests (Deployment, Service, Ingress)
 - [x] Prometheus metrics endpoint
@@ -458,16 +764,30 @@ pytest --cov=. --cov-report=html
 - [x] Container registry publishing
 - [x] CD pipeline for GHCR
 
-### Phase 5 (Upcoming)
+### Phase 5 ✅
 
-- [ ] Valkey (Redis) caching layer
-- [ ] MinIO (S3) storage layer
-- [ ] /store endpoint
-- [ ] /readyz health check endpoint
-- [ ] Helm charts
-- [ ] Kustomize overlays
-- [ ] Terraform IaC
-- [ ] Grafana observability
+- [x] Valkey (Redis) caching layer
+- [x] MinIO (S3) storage layer
+- [x] /store endpoint
+- [x] /readyz health check endpoint
+- [x] /healthz liveness endpoint
+- [x] Helm charts (dev, prod values)
+- [x] Kustomize overlays (dev, stg, prod)
+- [x] Prometheus + Grafana monitoring
+- [x] Custom Prometheus metrics
+- [x] ServiceMonitor for metrics scraping
+- [x] End-to-End tests with Venom (13 tests)
+- [x] Security scanning with Trivy
+- [x] Kubesec for K8s best practices
+
+### Phase 6 (Upcoming)
+
+- [ ] ArgoCD GitOps deployment
+- [ ] ExternalDNS for DNS management
+- [ ] Cert-Manager for TLS certificates
+- [ ] Dependabot for dependency updates
+- [ ] Kyverno for Policy as Code
+- [ ] Multi-cluster setup (Dev/Stage/Prod)
 
 ## Project Roadmap
 
@@ -478,12 +798,52 @@ pytest --cov=. --cov-report=html
 - ✅ **Phase 4**: Expand - Constructing a Shell
 
 ### Current Phase
-- 🎯 Phase 5: Transform - Caching, Storage, IaC
+- 🎯 Phase 6: Optimize - Improving
 
 ### Upcoming Phases
-- **Phase 5**: Transform - Caching, Storage, IaC
-- **Phase 6**: Optimize - GitOps, Production Ready
+- **Phase 6**: Optimize - GitOps, Production Hardening
 - **Phase 7**: Capstone Project
+
+## Architecture
+┌─────────────────────────────────────────────────────────────┐
+│                         User / Client                       │
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+                          ▼
+                  ┌───────────────┐
+                  │ Ingress-NGINX │
+                  └───────┬───────┘
+                          │
+                          ▼
+              ┌───────────────────────┐
+              │  HiveBox Service      │
+              │  (Port 8000)          │
+              └───────────┬───────────┘
+                          │
+         ┌────────────────┼────────────────┐
+         │                │                │
+         ▼                ▼                ▼
+    ┌────────┐      ┌─────────┐      ┌────────┐
+    │ Pod 1  │      │ Pod 2   │      │ Pod 3  │
+    │ HiveBox│      │ HiveBox │      │ HiveBox│
+    └───┬────┘      └────┬────┘      └────┬───┘
+        │                │                 │
+        └────────────────┼─────────────────┘
+                         │
+          ┌──────────────┼──────────────┐
+          │              │              │
+          ▼              ▼              ▼
+     ┌────────┐    ┌─────────┐    ┌─────────┐
+     │ Valkey │    │  MinIO  │    │OpenSense│
+     │ Cache  │    │ Storage │    │  Map API│
+     └────────┘    └─────────┘    └─────────┘
+          │              │
+          │              │
+          ▼              ▼
+     ┌──────────────────────────┐
+     │   Prometheus & Grafana   │
+     │   Monitoring Stack       │
+     └──────────────────────────┘
 
 ## Troubleshooting
 

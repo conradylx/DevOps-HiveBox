@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites>
+  <testsuite errors="13" name="Hivebox E2E Tests" package="hivebox.yaml" tests="13" time="1.038949">
+    <testcase classname="hivebox.yaml" name="Health-check" time="0.002682663">
+      <error><![CDATA[Testcase "Health check", step #0-0: Get "http://localhost:8000/healthz": dial tcp [::1]:8000: connect: connection refused (hivebox.yaml:12)]]></error>
+      <system-out><![CDATA[
+]]></system-out>
+      <system-err><![CDATA[
+]]></system-err>
+    </testcase>
+    <testcase classname="hivebox.yaml" name="Version-endpoint" time="0.002449823">
+      <error><![CDATA[Testcase "Version endpoint", step #0-0: Get "http://localhost:8000/version": dial tcp [::1]:8000: connect: connection refused (hivebox.yaml:22)]]></error>
+      <system-out><![CDATA[
+]]></system-out>
+      <system-err><![CDATA[
+]]></system-err>
+    </testcase>
+    <testcase classname="hivebox.yaml" name="Root-Endpoint-Returns-Version" time="0.002729521">
+      <error><![CDATA[Testcase "Root Endpoint Returns Version", step #0-0: Get "http://localhost:8000/": dial tcp [::1]:8000: connect: connection refused (hivebox.yaml:33)]]></error>
+      <system-out><![CDATA[
+]]></system-out>
+      <system-err><![CDATA[
+]]></system-err>
+    </testcase>
+    <testcase classname="hivebox.yaml" name="Temperature-Endpoint-First-Call-without-cache" time="0.00409035">
+      <error><![CDATA[Testcase "Temperature Endpoint - First Call (without cache)", step #0-0: Get "http://localhost:8000/temperature": dial tcp [::1]:8000: connect: connection refused (hivebox.yaml:43)]]></error>
+      <system-out><![CDATA[
+]]></system-out>
+      <system-err><![CDATA[
+]]></system-err>
+    </testcase>
+    <testcase classname="hivebox.yaml" name="Temperature-Endpoint-Second-Call-Cache-Hit" time="0.002030542">
+      <error><![CDATA[Testcase "Temperature Endpoint - Second Call (Cache Hit)", step #0-0: Get "http://localhost:8000/temperature": dial tcp [::1]:8000: connect: connection refused (hivebox.yaml:59)]]></error>
+      <system-out><![CDATA[
+]]></system-out>
+      <system-err><![CDATA[
+]]></system-err>
+    </testcase>
+    <testcase classname="hivebox.yaml" name="Readiness-Probe" time="0.00191288">
+      <error><![CDATA[Testcase "Readiness Probe", step #0-0: Get "http://localhost:8000/readyz": dial tcp [::1]:8000: connect: connection refused (hivebox.yaml:70)]]></error>
+      <system-out><![CDATA[
+]]></system-out>
+      <system-err><![CDATA[
+]]></system-err>
+    </testcase>
+    <testcase classname="hivebox.yaml" name="Metrics-Endpoint-Prometheus-Format" time="0.002110043">
+      <error><![CDATA[Testcase "Metrics Endpoint - Prometheus Format", step #0-0: Get "http://localhost:8000/metrics": dial tcp [::1]:8000: connect: connection refused (hivebox.yaml:83)]]></error>
+      <system-out><![CDATA[
+]]></system-out>
+      <system-err><![CDATA[
+]]></system-err>
+    </testcase>
+    <testcase classname="hivebox.yaml" name="API-Documentation-Swagger-UI" time="0.00183292">
+      <error><![CDATA[Testcase "API Documentation - Swagger UI", step #0-0: Get "http://localhost:8000/docs": dial tcp [::1]:8000: connect: connection refused (hivebox.yaml:98)]]></error>
+      <system-out><![CDATA[
+]]></system-out>
+      <system-err><![CDATA[
+]]></system-err>
+    </testcase>
+    <testcase classname="hivebox.yaml" name="OpenAPI-Schema" time="0.002303839">
+      <error><![CDATA[Testcase "OpenAPI Schema", step #0-0: Get "http://localhost:8000/openapi.json": dial tcp [::1]:8000: connect: connection refused (hivebox.yaml:108)]]></error>
+      <system-out><![CDATA[
+]]></system-out>
+      <system-err><![CDATA[
+]]></system-err>
+    </testcase>
+    <testcase classname="hivebox.yaml" name="Invalid-Endpoint-404" time="0.002317895">
+      <error><![CDATA[Testcase "Invalid Endpoint - 404", step #0-0: Get "http://localhost:8000/invalid-endpoint": dial tcp [::1]:8000: connect: connection refused (hivebox.yaml:119)]]></error>
+      <system-out><![CDATA[
+]]></system-out>
+      <system-err><![CDATA[
+]]></system-err>
+    </testcase>
+    <testcase classname="hivebox.yaml" name="Cache-Performance-Test" time="1.010315535">
+      <error><![CDATA[Testcase "Cache Performance Test", step #0-0: Get "http://localhost:8000/temperature": dial tcp [::1]:8000: connect: connection refused (hivebox.yaml:128)]]></error>
+      <error><![CDATA[Testcase "Cache Performance Test", step #2-0: Get "http://localhost:8000/temperature": dial tcp [::1]:8000: connect: connection refused (hivebox.yaml:137)]]></error>
+      <system-out><![CDATA[
+
+
+]]></system-out>
+      <system-err><![CDATA[
+
+
+]]></system-err>
+    </testcase>
+    <testcase classname="hivebox.yaml" name="Valkey-Connection-Check" time="0.001909113">
+      <error><![CDATA[Testcase "Valkey Connection Check", step #0-0: Get "http://localhost:8000/readyz": dial tcp [::1]:8000: connect: connection refused (hivebox.yaml:150)]]></error>
+      <system-out><![CDATA[
+]]></system-out>
+      <system-err><![CDATA[
+]]></system-err>
+    </testcase>
+    <testcase classname="hivebox.yaml" name="MinIO-Connection-Check" time="0.001939441">
+      <error><![CDATA[Testcase "MinIO Connection Check", step #0-0: Get "http://localhost:8000/readyz": dial tcp [::1]:8000: connect: connection refused (hivebox.yaml:160)]]></error>
+      <system-out><![CDATA[
+]]></system-out>
+      <system-err><![CDATA[
+]]></system-err>
+    </testcase>
+  </testsuite>
+</testsuites>

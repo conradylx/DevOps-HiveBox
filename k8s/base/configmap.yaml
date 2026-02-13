@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hivebox-config
+  namespace: hivebox
+data:
+  OPENSENSEMAP_API_URL: "https://api.opensensemap.org"
+  MAX_DATA_AGE_SECONDS: "604800"
+  SENSEBOX_IDS: "5eba5fbad46fb8001b799786,5c21ff8f919bf8001adf2488,5ade1acf223bd80019a1011c"
+  TEMPERATURE_PHENOMENON: "Temperatur"
+
+  # PYTHON CONFIGURATION
+  PYTHONPATH: "/code"
+  PYTHONUNBUFFERED: "1"
+
+  # VALKEY/REDIS CONFIGURATION
+  VALKEY_HOST: "valkey-service"
+  VALKEY_PORT: "6379"
+  CACHE_TTL: "360"
+
+  #MINIO CONFIGURATION
+  MINIO_ROOT_USER: "minioadmin"
+  MINIO_ROOT_PASSWORD: "minioadmin"
+  MINIO_ENDPOINT: "minio-service:9000"
+  MINIO_ACCESS_KEY: "minioadmin"
+  MINIO_SECRET_KEY: "minioadmin"
+  MINIO_BUCKET: "hivebox-data"
+  MINIO_SECURE: "false"
+  STORAGE_INTERVAL: "300"

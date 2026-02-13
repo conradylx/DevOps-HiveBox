@@ -1,0 +1,6 @@
+apiVersion: v2
+name: hivebox
+description: Hivebox - Temperature monitoring with cache and storage
+type: application
+version: 0.1.0
+appVersion: "0.3.0"
